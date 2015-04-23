@@ -1,0 +1,28 @@
+{
+  "name": "Jettio",
+  "version": "0.0.1",
+  "description": "Jettio Game",
+  "main": "index.html",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PotionsLab/Jettio.git"
+  },
+  "keywords": [
+    "jettio",
+    "jetpack",
+    "game",
+    "html5"
+  ],
+  "author": "Archon",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PotionsLab/Jettio/issues"
+  },
+  "homepage": "https://github.com/PotionsLab/Jettio",
+  "dependencies": {
+    "phaser": "^2.3.0"
+  }
+}
