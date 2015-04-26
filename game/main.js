@@ -35,6 +35,15 @@ function create () {
     key.right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     key.right.onDown.add(rightArrowKey, this);
 
+    // Touchscreen handle
+    game.input.onTap.add(function(e) {
+        if (e.x <= this.game.width/2) {
+            leftArrowKey();
+        } else if (e.x > this.game.width/2) {
+            rightArrowKey();
+        }
+    });
+
     // Objects on the sky ;)
     objects = game.add.group();
     objects.enableBody = true;
@@ -95,6 +104,7 @@ function rightArrowKey () {
     if (player.alive) {
         sky_bg.tilePosition.y += 10;
         objects.position.y += 300;
+        objectsPos -= 300;
         objRow(objectsPos);
     }
 }
@@ -108,7 +118,6 @@ function update () {
         sky_bg.tilePosition.x += Math.random() * 1.5 + -0.5
 
     if (player.alive) {
-        console.log(objects.length);
         if (cursors.left.isDown) {
             player.body.position.x = 300;
             player.scale.x = 1;
