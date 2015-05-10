@@ -1,69 +1,104 @@
-var game = new Phaser.Game(1244, 1920, Phaser.AUTO, '', {preload: preload, create: create, update: update});
+var width = navigator.isCocoonJS ? window.innerWidth : 320,
+    height = navigator.isCocoonJS ? window.innerHeight : 480,
+    game = new Phaser.Game(1244, 1920, Phaser.AUTO, '', {preload: preload, create: create, update: update});
 
 function preload () {
    game.load.image('sky_bg', '../assets/images/sky.png');
    game.load.image('player', '../assets/images/boy.png');
    game.load.image('star', '../assets/images/star.png');
    game.load.image('cloud', '../assets/images/cloud.png');
+   game.load.spritesheet('progress_bar', '../assets/images/progress_bar_sprite.png', 409, 110, 10);
    console.log('preloaded');
 }
 
 var sky_bg,
     player,
     cursors,
+    touch,
     key = {},
     objects,
-    objectsPos = 250,
+    objectsPos = -350,
     cloudyRow = false,
-    animatedObj;
+    tileSpeed = 10;
+
+function getRatio(type, w, h) {
+    var scaleX = width / w,
+        scaleY = height / h,
+        result = {
+            x: 1,
+            y: 1
+        };
+
+    switch (type) {
+    case 'all':
+        result.x = scaleX > scaleY ? scaleY : scaleX;
+        result.y = scaleX > scaleY ? scaleY : scaleX;
+        break;
+    case 'fit':
+        result.x = scaleX > scaleY ? scaleX : scaleY;
+        result.y = scaleX > scaleY ? scaleX : scaleY;
+        break;
+    case 'fill':
+        result.x = scaleX;
+        result.y = scaleY;
+        break;
+    }
+
+    return result;
+}
 
 /*
  * Create - predefine actions
  */
 function create () {
+    var ratio = getRatio('all', 320, 480);
+
+    if (navigator.isCocoonJS) {
+        game.world.scale.x = ratio.x;
+        game.world.scale.y = ratio.y;
+        game.world.updateTransform();
+    } else {
+        game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+        game.scale.minWidth = 320;
+        game.scale.minHeight = 480;
+        game.scale.pageAlignHorizontally = true;
+        game.scale.setScreenSize(true);
+    }
+
     game.physics.startSystem(Phaser.Physics.ARCADE);
     sky_bg = game.add.tileSprite(0, 0, 1244, 1920, 'sky_bg');
-
-    // Player
-    player = game.add.sprite(300, 1400, 'player');
-    game.physics.enable(player, Phaser.Physics.ARCADE);
-
-    // Keys
-    cursors = game.input.keyboard.createCursorKeys();
-    key.left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
-    key.left.onDown.add(leftArrowKey, this);
-    key.right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
-    key.right.onDown.add(rightArrowKey, this);
-
-    // Touchscreen handle
-    game.input.onTap.add(function(e) {
-        if (e.x <= this.game.width/2) {
-            leftArrowKey();
-        } else if (e.x > this.game.width/2) {
-            rightArrowKey();
-        }
-    });
 
     // Objects on the sky ;)
     objects = game.add.group();
     objects.enableBody = true;
     objects.physicsBodyType = Phaser.Physics.ARCADE;
-    objRow(null);
+    objFactory();
 
-    // Animation to objects
-    animatedObj = game.add.group();
-    animatedObj.enableBody = true;
-    animatedObj.physicsBodyType = Phaser.Physics.ARCADE;
-    animatedObj.create(350, 1450, 'star');
-    animatedObj.create(850, 1450, 'star');
-    animatedObj.visible = true;
-    animatedObj.children[0].visible = false;
+    // Player
+    player = game.add.sprite(800, 1400, 'player');
+    game.physics.enable(player, Phaser.Physics.ARCADE);
+
+    //Progress bar
+    progressBar = game.add.sprite(game.world.width/2-205, game.world.height/4, 'progress_bar');
+    progressBar.animations.add('change');
+    progressBar.animations.play('change', 1, true);
+
+    // Keys
+    cursors = game.input.keyboard.createCursorKeys();
+    key.left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+    key.left.onDown.add(onKeyPress, this);
+    key.right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+    key.right.onDown.add(onKeyPress, this);
+
+    key.mouse = game.input.onDown.add(onKeyPress, this);
+
+    key.pointer1 = game.input.mousePointer;
 }
 
 /*
- * objRow - create new row with objects
+ * objFactory - create new row with objects
  */
-function objRow () {
+function objFactory () {
     var obj = [];
 
     if (Math.floor(Math.random()*6) % 5 === 0 && !cloudyRow) {
@@ -86,60 +121,82 @@ function objRow () {
 }
 
 /*
- * leftArrowKey - left arrow key was fires
+ * onKeyPress - any input was fires (key/tap/mouse)
+ * @param {Object} event - input event
  */
-function leftArrowKey () {
+function onKeyPress (event) {
     if (player.alive) {
-        sky_bg.tilePosition.y += 10;
-        objects.position.y += 300;
-        objectsPos -= 300;
-        objRow(objectsPos);
+        // objects update
+
+        // Mode 1
+        // sky_bg.tilePosition.y += 10;
+        // objects.position.y += 300;
+        // objectsPos -= 300;
+
+        // Mode 2
+        sky_bg.tilePosition.y += tileSpeed;
+        objects.forEach(function (obj) { 
+            console.log(obj.body.velocity.y);
+                obj.body.velocity.y += 300;
+                tileSpeed = obj.body.velocity.y;
+            }, this);
+
+        objFactory();
+
+        if (event.x <= this.game.width/2 || key.left.isDown) {
+            onLeftPress();
+        } else if (event.x > this.game.width/2 || key.right.isDown) {
+            onRightPress();
+        }
     }
 }
 
 /*
- * rightArrowKey - right arrow key was fires
+ * onLeftPress - left input (key/tap/mouse) was fires
  */
-function rightArrowKey () {
+function onLeftPress () {
     if (player.alive) {
-        sky_bg.tilePosition.y += 10;
-        objects.position.y += 300;
-        objectsPos -= 300;
-        objRow(objectsPos);
+        // player update
+        player.position.x = game.world.width - 800;
+        player.scale.x = 1;
     }
 }
 
 /*
- * update - Phaser updater container. Contains everything what should be updated every thick.
+ * onRightPress - right input (key/tap/mouse) was fires
+ */
+function onRightPress () {
+    if (player.alive) {
+        // player update
+        player.position.x = game.world.width - 300;
+        player.anchor.setTo(.5, 0);
+        player.scale.x = -1;
+    }
+}
+
+/*
+ * update - Phaser updater container. 
+ * Contains everything what should be updated every thick.
  */
 function update () {
     sky_bg.tilePosition.y += 0.4;
     if (Math.floor(Math.random()*6) % 5 === 0)
-        sky_bg.tilePosition.x += Math.random() * 1.5 + -0.5
+        sky_bg.tilePosition.x += Math.random() * 1.5 + -0.5;
 
+    // Check collision
     if (player.alive) {
-        if (cursors.left.isDown) {
-            player.body.position.x = 300;
-            player.scale.x = 1;
-        } else if (cursors.right.isDown) {
-            player.body.position.x = 800;
-            player.anchor.setTo(.5, 0);
-            player.scale.x = -1;
-        }
-        // Check collision
         game.physics.arcade.overlap(objects, player, collisionHandler, null, this)
     }
 }
 
 /*
  * collisionHandler - handle player's collision with objects
+ * @param {Object.Phaser.Sprite} player - player object
+ * @param {Object.Phaser.Sprite} obj - object involved in a collision
  */
 function collisionHandler (player, obj) {
-    console.log('Collision happend!');
-
     if (obj.key === 'cloud') {
         player.kill();
-        console.log('Death! :(');
     } else {
         obj.kill();
     }
