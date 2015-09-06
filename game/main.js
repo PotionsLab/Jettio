@@ -19,7 +19,10 @@ var sky_bg,
     objects,
     objectsPos = -350,
     cloudyRow = false,
-    tileSpeed = 10;
+    tileSpeed = 10,
+    progressBar,
+    timer,
+    life = 5;
 
 function getRatio(type, w, h) {
     var scaleX = width / w,
@@ -80,8 +83,11 @@ function create () {
 
     //Progress bar
     progressBar = game.add.sprite(game.world.width/2-205, game.world.height/4, 'progress_bar');
-    progressBar.animations.add('change');
-    progressBar.animations.play('change', 1, true);
+    //progressBar.animations.add('change');
+    //progressBar.animations.play('change', 1, true);
+    timer = game.time.create(false);
+    timer.loop(1000, timerUpdate, this);
+    timer.start();
 
     // Keys
     cursors = game.input.keyboard.createCursorKeys();
@@ -93,6 +99,11 @@ function create () {
     key.mouse = game.input.onDown.add(onKeyPress, this);
 
     key.pointer1 = game.input.mousePointer;
+}
+
+function timerUpdate () {
+    life--;
+    progressBar.frame++;
 }
 
 /*
@@ -199,5 +210,9 @@ function collisionHandler (player, obj) {
         player.kill();
     } else {
         obj.kill();
+        if (progressBar.frame > 0) {
+            progressBar.frame--;
+            console.log("frames: " + progressBar.frame);
+        }
     }
 }
