@@ -26,5 +26,16 @@ build/Release
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
 
+# Builds
+www/build
+
 # Assets
-assets
+www/assets
+
+# Platforms
+platforms/android
+platforms/ios
+
+# Plugins
+!plugins/fetch.json
+plugins/*/

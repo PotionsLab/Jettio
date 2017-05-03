@@ -1,14 +1,17 @@
+import Phaser from 'phaser'
+
 var width = navigator.isCocoonJS ? window.innerWidth : 320,
     height = navigator.isCocoonJS ? window.innerHeight : 480,
     game = new Phaser.Game(1244, 1920, Phaser.AUTO, '', {preload: preload, create: create, update: update});
 
 function preload () {
-   game.load.image('sky_bg', '../assets/images/sky.png');
-   game.load.image('player', '../assets/images/boy.png');
-   game.load.image('star', '../assets/images/star.png');
-   game.load.image('cloud', '../assets/images/cloud.png');
-   game.load.spritesheet('progress_bar', '../assets/images/progress_bar_sprite.png', 409, 110, 10);
-   console.log('preloaded');
+    console.log("preload SERVER_URL: ", SERVER_URL);
+game.load.image('sky_bg', SERVER_URL + '/assets/images/sky.png');
+game.load.image('player', SERVER_URL + '/assets/images/boy.png');
+game.load.image('star', SERVER_URL + '/assets/images/star.png');
+game.load.image('cloud',SERVER_URL + '/assets/images/cloud.png');
+game.load.spritesheet('progress_bar', SERVER_URL + '/assets/images/progress_bar_sprite.png', 409, 110, 10);
+console.log('preloaded');
 }
 
 var sky_bg,
@@ -51,8 +54,8 @@ function getRatio(type, w, h) {
 }
 
 /*
- * Create - predefine actions
- */
+* Create - predefine actions
+*/
 function create () {
     var ratio = getRatio('all', 320, 480);
 
@@ -61,11 +64,11 @@ function create () {
         game.world.scale.y = ratio.y;
         game.world.updateTransform();
     } else {
-        game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+        game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
         game.scale.minWidth = 320;
         game.scale.minHeight = 480;
         game.scale.pageAlignHorizontally = true;
-        game.scale.setScreenSize(true);
+        // game.scale.setScreenSize(true);
     }
 
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -107,8 +110,8 @@ function timerUpdate () {
 }
 
 /*
- * objFactory - create new row with objects
- */
+* objFactory - create new row with objects
+*/
 function objFactory () {
     var obj = [];
 
@@ -132,9 +135,9 @@ function objFactory () {
 }
 
 /*
- * onKeyPress - any input was fires (key/tap/mouse)
- * @param {Object} event - input event
- */
+* onKeyPress - any input was fires (key/tap/mouse)
+* @param {Object} event - input event
+*/
 function onKeyPress (event) {
     if (player.alive) {
         // objects update
@@ -163,8 +166,8 @@ function onKeyPress (event) {
 }
 
 /*
- * onLeftPress - left input (key/tap/mouse) was fires
- */
+* onLeftPress - left input (key/tap/mouse) was fires
+*/
 function onLeftPress () {
     if (player.alive) {
         // player update
@@ -174,8 +177,8 @@ function onLeftPress () {
 }
 
 /*
- * onRightPress - right input (key/tap/mouse) was fires
- */
+* onRightPress - right input (key/tap/mouse) was fires
+*/
 function onRightPress () {
     if (player.alive) {
         // player update
@@ -186,10 +189,11 @@ function onRightPress () {
 }
 
 /*
- * update - Phaser updater container. 
- * Contains everything what should be updated every thick.
- */
+* update - Phaser updater container. 
+* Contains everything what should be updated every thick.
+*/
 function update () {
+    console.log("update SERVER_URL: ", SERVER_URL);
     sky_bg.tilePosition.y += 0.4;
     if (Math.floor(Math.random()*6) % 5 === 0)
         sky_bg.tilePosition.x += Math.random() * 1.5 + -0.5;
@@ -201,10 +205,10 @@ function update () {
 }
 
 /*
- * collisionHandler - handle player's collision with objects
- * @param {Object.Phaser.Sprite} player - player object
- * @param {Object.Phaser.Sprite} obj - object involved in a collision
- */
+* collisionHandler - handle player's collision with objects
+* @param {Object.Phaser.Sprite} player - player object
+* @param {Object.Phaser.Sprite} obj - object involved in a collision
+*/
 function collisionHandler (player, obj) {
     if (obj.key === 'cloud') {
         player.kill();
