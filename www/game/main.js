@@ -15,6 +15,8 @@ function preload () {
     game.load.image('bush', SERVER_URL + '/assets/images/bush.png');
     game.load.image('jetpack', SERVER_URL + '/assets/images/jetpack.png');
     game.load.spritesheet('nitro-fire', SERVER_URL + '/assets/images/nitro-fire.png', 11, 7, 3);
+    game.load.image('game-over-panel', SERVER_URL + '/assets/images/game-over-panel.png');
+    game.load.image('play-button', SERVER_URL + '/assets/images/play-button.png');
 }
 
 var sky_bg,
@@ -46,7 +48,14 @@ var sky_bg,
         coins: 0
     },
     texts = {
-        points: null
+        points: null,
+        resultsPoints: null,
+        distance: null,
+        bonusPoints: null
+    },
+    ui = {
+        gameOverPanel: null,
+        playButton: null
     };
 
 var STAGE = {
@@ -156,7 +165,26 @@ function create () {
     // texts.points.setShadow(2, 2, "#333333", 2, false, false);
 
     //Jettio logotype
-        jettioLogotype = game.add.sprite(16, 16, "jettio-logotype");
+    jettioLogotype = game.add.sprite(16, 16, "jettio-logotype");
+
+    // Game over
+    ui.gameOverPanel = game.add.sprite(5, 50, "game-over-panel");
+    ui.gameOverPanel.visible = false;
+    texts.gameOver = game.add.text(game.world.centerX, 65, "Game Over", {font: "14px Upheavtt", fill: "#fff"});
+    texts.gameOver.anchor.setTo(0.5);
+    texts.gameOver.stroke = "#000";
+    texts.gameOver.strokeThickness = 2;
+    texts.gameOver.visible = false;
+
+    texts.resultsPoints = game.add.text(60, 84, "Points: " + zeroFill(counters.coins, 6), {font: "12px Upheavtt", fill: "#fff"});
+    texts.resultsPoints.anchor.setTo(0.5);
+    texts.resultsPoints.stroke = "#000";
+    texts.resultsPoints.strokeThickness = 2;
+    texts.resultsPoints.visible = false;
+
+    // ui.playButton = game.add.sprite(35, 135, "play-button");
+    ui.playButton = game.add.button(game.world.centerX - 28, 135, 'play-button', restartGame, this);
+    ui.playButton.visible = false;
 
     // Keys
     cursors = game.input.keyboard.createCursorKeys();
@@ -168,6 +196,10 @@ function create () {
     key.mouse = game.input.onDown.add(onKeyPress, this);
 
     key.pointer1 = game.input.mousePointer;
+}
+
+function restartGame () {
+    console.log("click!");
 }
 
 function updateFire () {
@@ -346,7 +378,11 @@ function update () {
             game.physics.arcade.overlap(clouds, player.character, collisionHandler, null, this)
         }
     } else if (globalState === STAGE["GAME_OVER"]) {
-        console.log("GAME_OVER");
+        ui.gameOverPanel.visible = true;
+        texts.gameOver.visible = true;
+        texts.resultsPoints.visible = true;
+        texts.resultsPoints.text = "Points: " + zeroFill(counters.coins, 6);
+        ui.playButton.visible = true;
     }
 }
 
