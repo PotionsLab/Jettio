@@ -5,6 +5,7 @@ var width = navigator.isCocoonJS ? window.innerWidth : 320,
     game = new Phaser.Game(120, 190, Phaser.AUTO, '', {preload: preload, create: create, update: update}, false, false);
 
 function preload () {
+    game.load.image('jettio-logotype', SERVER_URL + '/assets/images/jettio-logotype.png');
     game.load.image('sky_bg', SERVER_URL + '/assets/images/sky-bg.jpg');
     game.load.spritesheet('player', SERVER_URL + '/assets/images/jettio.png', 25, 32, 5);
     game.load.spritesheet('coin', SERVER_URL + '/assets/images/coin.png', 18, 18, 5);
@@ -12,14 +13,17 @@ function preload () {
     game.load.spritesheet('progress_bar', SERVER_URL + '/assets/images/progress_bar_sprite.png', 409, 110, 10);
     game.load.image('ground', SERVER_URL + '/assets/images/ground.png');
     game.load.image('bush', SERVER_URL + '/assets/images/bush.png');
+    game.load.image('jetpack', SERVER_URL + '/assets/images/jetpack.png');
+    game.load.spritesheet('nitro-fire', SERVER_URL + '/assets/images/nitro-fire.png', 11, 7, 3);
 }
 
 var sky_bg,
+    jettioLogotype,
     player = {
         group: null,
         character: null,
         jetpack: null,
-        nitrFire: null
+        nitroFire: null
     },
     cursors,
     touch,
@@ -34,12 +38,22 @@ var sky_bg,
     timer,
     life = 5,
     ground,
-    bush;
+    bush,
+    timers = {
+        fire: 0
+    },
+    counters = {
+        coins: 0
+    },
+    texts = {
+        points: null
+    };
 
 var STAGE = {
     NOT_STARTED: "NOT_STARTED",
     INITATION: "INITATION",
-    FLIGHT: "FLIGHT"
+    FLIGHT: "FLIGHT",
+    GAME_OVER: "GAME_OVER"
 };
 var globalState = STAGE["NOT_STARTED"];
 
@@ -84,7 +98,7 @@ function create () {
         game.world.scale.y = ratio.y;
         game.world.updateTransform();
     } else {
-        game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
+        // game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
         game.scale.minWidth = 120;
         game.scale.minHeight = 190;
         game.scale.pageAlignHorizontally = true;
@@ -113,9 +127,15 @@ function create () {
     // Player
     player.group = game.add.group();
     player.character = player.group.create(80, 140, "player");
+    player.jetpack = player.group.create(82, 155, "jetpack");
+    player.jetpack.visible = false;
+    player.nitroFire = player.group.create(89, 167, "nitro-fire");
+    player.nitroFire.visible = false;
 
     // player = game.add.sprite(80, 140, 'player');
     game.physics.enable(player.character, Phaser.Physics.ARCADE);
+
+    game.time.events.loop(Phaser.Timer.SECOND, updateFire, this);
 
     // //Progress bar
     // progressBar = game.add.sprite(game.world.width/2-205, game.world.height/4, 'progress_bar');
@@ -124,6 +144,19 @@ function create () {
     // timer = game.time.create(false);
     // timer.loop(1000, timerUpdate, this);
     // timer.start();
+
+    // Points
+    texts.points = game.add.text(28, 10, zeroFill(counters.coins, 6), {font: "14px Upheavtt", fill: "#fff"});
+    texts.points.anchor.setTo(0.5);
+
+    // texts.points.font = 'Upheavtt';
+    // texts.points.fontSize = 14;
+    texts.points.stroke = "#000";
+    texts.points.strokeThickness = 2;
+    // texts.points.setShadow(2, 2, "#333333", 2, false, false);
+
+    //Jettio logotype
+        jettioLogotype = game.add.sprite(16, 16, "jettio-logotype");
 
     // Keys
     cursors = game.input.keyboard.createCursorKeys();
@@ -135,6 +168,12 @@ function create () {
     key.mouse = game.input.onDown.add(onKeyPress, this);
 
     key.pointer1 = game.input.mousePointer;
+}
+
+function updateFire () {
+    if (player.nitroFire.frame > 0 && (Date.now() - timers.fire) > Phaser.Timer.SECOND) {
+        player.nitroFire.frame--;
+    }
 }
 
 function timerUpdate () {
@@ -218,6 +257,12 @@ function onKeyPress (event) {
 
             // Mode 2
             sky_bg.tilePosition.y += tileSpeed;
+            
+            timers.fire = Date.now();
+            if (player.nitroFire.frame < 2) {
+                player.nitroFire.frame++;
+            }
+
             coins.forEach(function (obj) { 
                     obj.body.velocity.y += 30;
                     tileSpeed = obj.body.velocity.y;
@@ -244,8 +289,13 @@ function onKeyPress (event) {
 function onLeftPress () {
     if (player.character.alive) {
         // player update
-        player.character.position.x = game.world.width - 80;
-        player.character.scale.x = 1;
+        player.group.forEach((element) => {
+            element.position.x = game.world.width - 80;
+            element.scale.x = 1;
+        });
+
+        // player.character.position.x = game.world.width - 80;
+        // player.character.scale.x = 1;
     }
 }
 
@@ -255,9 +305,15 @@ function onLeftPress () {
 function onRightPress () {
     if (player.character.alive) {
         // player update
-        player.character.position.x = game.world.width - 30;
-        player.character.anchor.setTo(.5, 0);
-        player.character.scale.x = -1;
+        player.group.forEach((element) => {
+            element.position.x = game.world.width - 30;
+            element.anchor.setTo(.5, 0);
+            element.scale.x = -1;
+        });
+
+        // player.character.position.x = game.world.width - 30;
+        // player.character.anchor.setTo(.5, 0);
+        // player.character.scale.x = -1;
     }
 }
 
@@ -267,14 +323,19 @@ function onRightPress () {
 */
 function update () {
     if (globalState === STAGE["INITATION"]) {
+        jettioLogotype.y -= 0.4;
         ground.position.y += 0.3;
         bush.position.y += 0.4;
+
+        player.jetpack.visible = true;
+        player.nitroFire.visible= true;
 
         if (ground.position.y > 190 && bush.position.y > 190) {
             globalState = STAGE["FLIGHT"];
             // here clear ground and bush (garbage collector needed)
         }
     } else if (globalState === STAGE["FLIGHT"]) {
+        texts.points.text = zeroFill(counters.coins, 6);
         sky_bg.tilePosition.y += 0.4;
         if (Math.floor(Math.random()*6) % 5 === 0)
             sky_bg.tilePosition.x += Math.random() * 1.5 + -0.5;
@@ -284,7 +345,9 @@ function update () {
             game.physics.arcade.overlap(coins, player.character, collisionHandler, null, this)
             game.physics.arcade.overlap(clouds, player.character, collisionHandler, null, this)
         }
-    }    
+    } else if (globalState === STAGE["GAME_OVER"]) {
+        console.log("GAME_OVER");
+    }
 }
 
 /*
@@ -292,14 +355,29 @@ function update () {
 * @param {Object.Phaser.Sprite} player - player object
 * @param {Object.Phaser.Sprite} obj - object involved in a collision
 */
-function collisionHandler (player, obj) {
-    if (obj.key === 'angry-cloud') {
-        player.kill();
-    } else {
+function collisionHandler (char, obj) {
+    if (obj.key === "angry-cloud") {
+        char.kill();
+        player.jetpack.visible = false;
+        player.nitroFire.visible = false;
+
+        globalState = STAGE["GAME_OVER"];
+    } else if (obj.key === "coin") {
         obj.kill();
+        counters.coins++;
         // if (progressBar.frame > 0) {
         //     progressBar.frame--;
         //     console.log("frames: " + progressBar.frame);
         // }
     }
+}
+
+function zeroFill ( number, width ) {
+  width -= number.toString().length;
+
+  if (width > 0) {
+    return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+  }
+
+  return number + "";
 }
