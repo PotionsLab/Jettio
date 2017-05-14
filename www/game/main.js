@@ -51,7 +51,8 @@ var sky_bg,
         points: null,
         resultsPoints: null,
         distance: null,
-        bonusPoints: null
+        bonusPoints: null,
+        gameOver: null
     },
     ui = {
         gameOverPanel: null,
@@ -199,7 +200,34 @@ function create () {
 }
 
 function restartGame () {
-    console.log("click!");
+    // counters
+    counters.coins = 0;
+    timers.fire = 0;
+
+    // visibility
+    ui.gameOverPanel.visible = false;
+    ui.playButton.visible = false;
+    player.character.visible = true;
+    texts.gameOver.visible = false;
+    texts.resultsPoints.visible = false;
+
+    // positions
+    ground.position.y = 156;
+    bush.position.y = 140;
+    jettioLogotype.position.y = 16;
+
+    coins.forEach((coin) => {
+        coin.kill();
+    })
+
+    clouds.forEach((cloud) => {
+        cloud.kill();
+    });
+
+    player.character.revive();
+    // player.character.alive = true;
+    // game.physics.enable(player.character, Phaser.Physics.ARCADE);
+    globalState = STAGE.NOT_STARTED;
 }
 
 function updateFire () {
@@ -275,6 +303,7 @@ function objFactory () {
 * @param {Object} event - input event
 */
 function onKeyPress (event) {
+    console.log("key pressed");
     if (globalState === STAGE["NOT_STARTED"]) {
         globalState = STAGE["INITATION"];
         player.character.frame = 1;
@@ -354,6 +383,8 @@ function onRightPress () {
 * Contains everything what should be updated every thick.
 */
 function update () {
+    console.log("globalState: ", globalState);
+
     if (globalState === STAGE["INITATION"]) {
         jettioLogotype.y -= 0.4;
         ground.position.y += 0.3;
