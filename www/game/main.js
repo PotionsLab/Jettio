@@ -2,7 +2,10 @@ import Phaser from 'phaser'
 
 var width = navigator.isCocoonJS ? window.innerWidth : 320,
     height = navigator.isCocoonJS ? window.innerHeight : 480,
-    game = new Phaser.Game(120, 190, Phaser.AUTO, '', {preload: preload, create: create, update: update}, false, false);
+    game = new Phaser.Game(120, 190, Phaser.AUTO, 'g', {preload: preload, create: create, update: update}, false, false);
+
+console.log(Phaser.Canvas);
+Phaser.Canvas.setSmoothingEnabled("2d", false);
 
 function preload () {
     game.load.image('jettio-logotype', SERVER_URL + '/assets/images/jettio-logotype.png');
@@ -10,13 +13,14 @@ function preload () {
     game.load.spritesheet('player', SERVER_URL + '/assets/images/jettio.png', 25, 32, 5);
     game.load.spritesheet('coin', SERVER_URL + '/assets/images/coin.png', 18, 18, 5);
     game.load.spritesheet('angry-cloud',SERVER_URL + '/assets/images/angry-cloud.png', 38, 31, 3);
-    game.load.spritesheet('progress_bar', SERVER_URL + '/assets/images/progress_bar_sprite.png', 409, 110, 10);
+    game.load.spritesheet('progress_bar', SERVER_URL + '/assets/images/progressbar.png', 60, 11, 11);
     game.load.image('ground', SERVER_URL + '/assets/images/ground.png');
     game.load.image('bush', SERVER_URL + '/assets/images/bush.png');
     game.load.image('jetpack', SERVER_URL + '/assets/images/jetpack.png');
     game.load.spritesheet('nitro-fire', SERVER_URL + '/assets/images/nitro-fire.png', 11, 7, 3);
     game.load.image('game-over-panel', SERVER_URL + '/assets/images/game-over-panel.png');
     game.load.image('play-button', SERVER_URL + '/assets/images/play-button.png');
+    game.load.spritesheet('nitro-bottle', SERVER_URL + '/assets/images/nitro-bottle.png', 20, 20, 1);
 }
 
 var sky_bg,
@@ -33,6 +37,7 @@ var sky_bg,
     objects,
     coins,
     clouds,
+    nitros,
     objectsPos = -35,
     cloudyRow = false,
     tileSpeed = 10,
@@ -97,6 +102,9 @@ function getRatio(type, w, h) {
 * Create - predefine actions
 */
 function create () {
+    // game.canvas.setSmoothingEnabled(this.game.context, false);
+    // Phaser.Canvas.setSmoothingEnabled(game.context, false);
+
     // var ratio = getRatio('all', 120, 190);
     sky_bg = game.add.tileSprite(0, 0, 120, 190, 'sky_bg');
     ground = game.add.sprite(0, 156, 'ground');
@@ -108,7 +116,7 @@ function create () {
         game.world.scale.y = ratio.y;
         game.world.updateTransform();
     } else {
-        // game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
+        game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         game.scale.minWidth = 120;
         game.scale.minHeight = 190;
         game.scale.pageAlignHorizontally = true;
@@ -132,6 +140,11 @@ function create () {
     clouds.enableBody = true;
     clouds.physicsBodyType = Phaser.Physics.ARCADE;
 
+    // nitros
+    nitros = game.add.group();
+    nitros.enableBody = true;
+    nitros.physicsBodyType = Phaser.Physics.ARCADE;
+
     objFactory();
 
     // Player
@@ -147,13 +160,13 @@ function create () {
 
     game.time.events.loop(Phaser.Timer.SECOND, updateFire, this);
 
-    // //Progress bar
-    // progressBar = game.add.sprite(game.world.width/2-205, game.world.height/4, 'progress_bar');
-    // //progressBar.animations.add('change');
-    // //progressBar.animations.play('change', 1, true);
-    // timer = game.time.create(false);
-    // timer.loop(1000, timerUpdate, this);
-    // timer.start();
+    //Progress bar
+    progressBar = game.add.sprite(game.world.width/2-31, game.world.height/4, 'progress_bar');
+    //progressBar.animations.add('change');
+    //progressBar.animations.play('change', 1, true);
+    progressBar.visible = false;
+    timer = game.time.create(false);
+    timer.loop(2000, timerUpdate, this);
 
     // Points
     texts.points = game.add.text(28, 10, zeroFill(counters.coins, 6), {font: "14px Upheavtt", fill: "#fff"});
@@ -224,6 +237,10 @@ function restartGame () {
         cloud.kill();
     });
 
+    nitros.forEach((nitro) => {
+        nitro.kill();
+    });
+
     player.character.revive();
     // player.character.alive = true;
     // game.physics.enable(player.character, Phaser.Physics.ARCADE);
@@ -261,6 +278,20 @@ function objFactory () {
             coin.animations.add('spin');
             coin.animations.play('spin', 5, true);
         }
+    } else if (Math.floor(Math.random()*6) % 5 === 0 && !cloudyRow) {
+        if (Math.floor(Math.random()) > 0.5) {
+            const nitro = nitros.create(30, objectsPos, "nitro-bottle");
+            const coin = coins.create(80, objectsPos, "coin");
+
+            coin.animations.add('spin');
+            coin.animations.play('spin', 5, true);
+        } else {
+            const coin = coins.create(30, objectsPos, "coin");
+            const nitro = nitros.create(80, objectsPos, "nitro-bottle");
+
+            coin.animations.add('spin');
+            coin.animations.play('spin', 5, true);
+        }   
     } else {
         var coin1 = coins.create(30, objectsPos, "coin");
         var coin2 = coins.create(80, objectsPos, "coin");
@@ -303,10 +334,10 @@ function objFactory () {
 * @param {Object} event - input event
 */
 function onKeyPress (event) {
-    console.log("key pressed");
     if (globalState === STAGE["NOT_STARTED"]) {
         globalState = STAGE["INITATION"];
         player.character.frame = 1;
+        progressBar.visible = true;
     }else if (globalState === STAGE["FLIGHT"]) {
         if (player.character.alive) {
             // objects update
@@ -332,6 +363,10 @@ function onKeyPress (event) {
                     obj.body.velocity.y += 30;
                     tileSpeed = obj.body.velocity.y;
                 }, this);
+            nitros.forEach(function (obj) { 
+                    obj.body.velocity.y += 30;
+                    tileSpeed = obj.body.velocity.y;
+                }, this); 
 
             objFactory();
 
@@ -383,8 +418,6 @@ function onRightPress () {
 * Contains everything what should be updated every thick.
 */
 function update () {
-    console.log("globalState: ", globalState);
-
     if (globalState === STAGE["INITATION"]) {
         jettioLogotype.y -= 0.4;
         ground.position.y += 0.3;
@@ -395,6 +428,9 @@ function update () {
 
         if (ground.position.y > 190 && bush.position.y > 190) {
             globalState = STAGE["FLIGHT"];
+            timer = game.time.create(false);
+            timer.loop(1000, timerUpdate, this);
+            timer.start();
             // here clear ground and bush (garbage collector needed)
         }
     } else if (globalState === STAGE["FLIGHT"]) {
@@ -407,6 +443,20 @@ function update () {
         if (player.character.alive) {
             game.physics.arcade.overlap(coins, player.character, collisionHandler, null, this)
             game.physics.arcade.overlap(clouds, player.character, collisionHandler, null, this)
+            game.physics.arcade.overlap(nitros, player.character, collisionHandler, null, this)
+        }
+
+        // Check available nitro
+        console.log("PG frame: ", progressBar.frame);
+        if (progressBar.frame === 10) {
+            player.character.kill();
+            player.jetpack.visible = false;
+            player.nitroFire.visible = false;
+
+            globalState = STAGE["GAME_OVER"];
+            progressBar.visible = false;
+            progressBar.frame = 0;
+            timer.stop();
         }
     } else if (globalState === STAGE["GAME_OVER"]) {
         ui.gameOverPanel.visible = true;
@@ -429,13 +479,20 @@ function collisionHandler (char, obj) {
         player.nitroFire.visible = false;
 
         globalState = STAGE["GAME_OVER"];
+        progressBar.visible = false;
+        progressBar.frame = 0;
+        timer.stop();
     } else if (obj.key === "coin") {
         obj.kill();
         counters.coins++;
         // if (progressBar.frame > 0) {
         //     progressBar.frame--;
-        //     console.log("frames: " + progressBar.frame);
         // }
+    } else if (obj.key === "nitro-bottle") {
+        obj.kill();
+        if (progressBar.frame > 0) {
+            progressBar.frame--;
+        }
     }
 }
 
