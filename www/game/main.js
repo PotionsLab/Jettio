@@ -4,9 +4,9 @@ var width = navigator.isCocoonJS ? window.innerWidth : 320,
     height = navigator.isCocoonJS ? window.innerHeight : 480,
     game = new Phaser.Game(120, 190, Phaser.AUTO, 'g', {preload: preload, create: create, update: update}, false, false);
 
-console.log(Phaser.Canvas);
-Phaser.Canvas.setSmoothingEnabled("2d", false);
 
+// Phaser.Canvas.setSmoothingEnabled("2d", false);
+ 
 function preload () {
     game.load.image('jettio-logotype', SERVER_URL + '/assets/images/jettio-logotype.png');
     game.load.image('sky_bg', SERVER_URL + '/assets/images/sky-bg.jpg');
@@ -447,7 +447,6 @@ function update () {
         }
 
         // Check available nitro
-        console.log("PG frame: ", progressBar.frame);
         if (progressBar.frame === 10) {
             player.character.kill();
             player.jetpack.visible = false;
