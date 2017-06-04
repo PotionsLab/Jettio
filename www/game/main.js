@@ -161,7 +161,7 @@ function create () {
     game.time.events.loop(Phaser.Timer.SECOND, updateFire, this);
 
     //Progress bar
-    progressBar = game.add.sprite(game.world.width/2-31, game.world.height/4, 'progress_bar');
+    progressBar = game.add.sprite(game.world.width/2-31, Math.floor(game.world.height/4), 'progress_bar');
     //progressBar.animations.add('change');
     //progressBar.animations.play('change', 1, true);
     progressBar.visible = false;
@@ -490,6 +490,9 @@ function collisionHandler (char, obj) {
     } else if (obj.key === "nitro-bottle") {
         obj.kill();
         if (progressBar.frame > 0) {
+            timer.stop();
+            timer.loop(1000, timerUpdate, this);
+            timer.start();
             progressBar.frame--;
         }
     }
