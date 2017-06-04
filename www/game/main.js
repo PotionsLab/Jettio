@@ -13,7 +13,7 @@ function preload () {
     game.load.spritesheet('player', SERVER_URL + '/assets/images/jettio.png', 25, 32, 5);
     game.load.spritesheet('coin', SERVER_URL + '/assets/images/coin.png', 18, 18, 5);
     game.load.spritesheet('angry-cloud',SERVER_URL + '/assets/images/angry-cloud.png', 38, 31, 3);
-    game.load.spritesheet('progress_bar', SERVER_URL + '/assets/images/progressbar.png', 60, 11, 11);
+    game.load.spritesheet('progress_bar', SERVER_URL + '/assets/images/progressbar.png', 60, 11, 12);
     game.load.image('ground', SERVER_URL + '/assets/images/ground.png');
     game.load.image('bush', SERVER_URL + '/assets/images/bush.png');
     game.load.image('jetpack', SERVER_URL + '/assets/images/jetpack.png');
@@ -447,7 +447,7 @@ function update () {
         }
 
         // Check available nitro
-        if (progressBar.frame === 10) {
+        if (progressBar.frame === 11) {
             player.character.kill();
             player.jetpack.visible = false;
             player.nitroFire.visible = false;
