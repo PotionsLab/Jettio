@@ -57,12 +57,31 @@ var sky_bg,
         resultsPoints: null,
         distance: null,
         bonusPoints: null,
-        gameOver: null
+        gameOver: null,
+        level: null
     },
     ui = {
         gameOverPanel: null,
         playButton: null
-    };
+    },
+    level = 0,
+    levels = [{
+        dist: 0,
+        name: "Level 1"
+    },{
+        dist: 1000,
+        name: "Level 2" 
+    }, {
+        dist: 2000,
+        name: "Level 3"
+    }, {
+        dist: 3000,
+        name: "Level 4"
+    }, {
+        dist: 4000,
+        name: "Level 5"
+    }],
+    distance = 0;
 
 var STAGE = {
     NOT_STARTED: "NOT_STARTED",
@@ -436,6 +455,9 @@ function update () {
     } else if (globalState === STAGE["FLIGHT"]) {
         texts.points.text = zeroFill(counters.coins, 6);
         sky_bg.tilePosition.y += 0.4;
+        distance += 1;
+        renderLevelInfo(distance);
+
         if (Math.floor(Math.random()*6) % 5 === 0)
             sky_bg.tilePosition.x += Math.random() * 1.5 + -0.5;
 
@@ -456,6 +478,7 @@ function update () {
             progressBar.visible = false;
             progressBar.frame = 0;
             timer.stop();
+            distance = 0;
         }
     } else if (globalState === STAGE["GAME_OVER"]) {
         ui.gameOverPanel.visible = true;
@@ -498,6 +521,22 @@ function collisionHandler (char, obj) {
     }
 }
 
+function renderLevelInfo(distance) {
+    if (distance > levels[level].dist) {
+        console.log("New Level");
+        texts.level = game.add.text(60, 84, levels[level].name, {font: "12px Upheavtt", fill: "#fff"});
+        texts.level.anchor.setTo(0.5);
+        texts.level.stroke = "#000";
+        texts.level.strokeThickness = 2;
+        texts.level.visible = true;
+
+        game.time.events.add(Phaser.Timer.SECOND * 3, () =>{texts.level.visible = false;}, this);
+
+        level++;
+    }
+}
+
+// Utils
 function zeroFill ( number, width ) {
   width -= number.toString().length;
 
