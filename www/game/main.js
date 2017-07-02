@@ -390,9 +390,17 @@ function onKeyPress (event) {
             objFactory();
 
             if (event.x <= this.game.width/2 || key.left.isDown) {
-                onLeftPress();
+                const delayTimer = game.time.create(true);
+                delayTimer.add(0, () => {
+                    onLeftPress();
+                }, this);
+                delayTimer.start();
             } else if (event.x > this.game.width/2 || key.right.isDown) {
-                onRightPress();
+                const delayTimer = game.time.create(true);
+                delayTimer.add(0, () => {
+                    onRightPress();
+                }, this);
+                delayTimer.start();
             }
         }
     }
