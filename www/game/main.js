@@ -1,4 +1,4 @@
-import Phaser from 'phaser'
+import Phaser from 'phaser';
 
 var width = navigator.isCocoonJS ? window.innerWidth : 320,
     height = navigator.isCocoonJS ? window.innerHeight : 480,
@@ -388,7 +388,11 @@ function onRightPress () {
 * Contains everything what should be updated every thick.
 */
 function update () {
-    if (globalState === STAGE["INITATION"]) {
+    if (globalState === STAGE["NOT_STARTED"]) {
+        player.group.forEach((element) => {
+            element.position.x = 80;
+        });
+    } else if (globalState === STAGE["INITATION"]) {
         jettioLogotype.y -= 0.4;
         ground.position.y += 0.3;
         bush.position.y += 0.4;
