@@ -1,0 +1,6 @@
+export const STAGE = {
+    NOT_STARTED: "NOT_STARTED",
+    INITATION: "INITATION",
+    FLIGHT: "FLIGHT",
+    GAME_OVER: "GAME_OVER"
+};

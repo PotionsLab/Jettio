@@ -1,8 +1,27 @@
 import Phaser from 'phaser';
 
-var width = navigator.isCocoonJS ? window.innerWidth : 320,
-    height = navigator.isCocoonJS ? window.innerHeight : 480,
-    game = new Phaser.Game(120, 190, Phaser.AUTO, 'g', {preload: preload, create: create, update: update}, false, false);
+// Consts
+import {LEVEL} from "./consts/levels";
+import {STAGE} from "./consts/stage";
+
+import {state} from "./state";
+import {timers} from "./timers";
+
+const width = 320;
+const height = 480;
+const game = new Phaser.Game(
+    120, 
+    190, 
+    Phaser.AUTO, 
+    "game", 
+    {
+        preload: preload, 
+        create: create, 
+        update: update
+    }, 
+    false,
+    false
+);
  
 function preload () {
     game.load.image('jettio-logotype', SERVER_URL + '/assets/images/jettio-logotype.png');
@@ -37,15 +56,9 @@ var sky_bg,
     nitros,
     objectsPos = -35,
     cloudyRow = false,
-    tileSpeed = 10,
     progressBar,
-    timer,
-    life = 5,
     ground,
     bush,
-    timers = {
-        fire: 0
-    },
     counters = {
         coins: 0
     },
@@ -60,33 +73,7 @@ var sky_bg,
     ui = {
         gameOverPanel: null,
         playButton: null
-    },
-    level = 0,
-    levels = [{
-        dist: 0,
-        name: "Level 1"
-    },{
-        dist: 1000,
-        name: "Level 2" 
-    }, {
-        dist: 2000,
-        name: "Level 3"
-    }, {
-        dist: 3000,
-        name: "Level 4"
-    }, {
-        dist: 4000,
-        name: "Level 5"
-    }],
-    distance = 0;
-
-var STAGE = {
-    NOT_STARTED: "NOT_STARTED",
-    INITATION: "INITATION",
-    FLIGHT: "FLIGHT",
-    GAME_OVER: "GAME_OVER"
-};
-var globalState = STAGE["NOT_STARTED"];
+    };
 
 function getRatio(type, w, h) {
     var scaleX = width / w,
@@ -167,8 +154,8 @@ function create () {
     //Progress bar
     progressBar = game.add.sprite(game.world.width/2-31, Math.floor(game.world.height/4), 'progress_bar');
     progressBar.visible = false;
-    timer = game.time.create(false);
-    timer.loop(2000, timerUpdate, this);
+    timers.fuel = game.time.create(false);
+    timers.fuel.loop(2000, timerUpdate, this);
 
     // Points
     texts.points = game.add.text(28, 10, zeroFill(counters.coins, 6), {font: "14px Upheavtt", fill: "#fff"});
@@ -243,7 +230,7 @@ function restartGame () {
     });
 
     player.character.revive();
-    globalState = STAGE.NOT_STARTED;
+    state.gameState = STAGE.NOT_STARTED;
 }
 
 function updateFire () {
@@ -253,7 +240,6 @@ function updateFire () {
 }
 
 function timerUpdate () {
-    life--;
     progressBar.frame++;
 }
 
@@ -310,14 +296,14 @@ function objFactory () {
 * @param {Object} event - input event
 */
 function onKeyPress (event) {
-    if (globalState === STAGE["NOT_STARTED"]) {
-        globalState = STAGE["INITATION"];
+    if (state.gameState === STAGE.NOT_STARTED) {
+        state.gameState = STAGE.INITATION;
         player.character.frame = 1;
         progressBar.visible = true;
-    }else if (globalState === STAGE["FLIGHT"]) {
+    }else if (state.gameState === STAGE.FLIGHT) {
         if (player.character.alive) {
             // objects update
-            sky_bg.tilePosition.y += tileSpeed;
+            sky_bg.tilePosition.y += state.tileSpeed;
             
             timers.fire = Date.now();
             if (player.nitroFire.frame < 2) {
@@ -326,15 +312,15 @@ function onKeyPress (event) {
 
             coins.forEach(function (obj) { 
                     obj.body.velocity.y += 30;
-                    tileSpeed = obj.body.velocity.y;
+                    state.tileSpeed = obj.body.velocity.y;
                 }, this);
             clouds.forEach(function (obj) { 
                     obj.body.velocity.y += 30;
-                    tileSpeed = obj.body.velocity.y;
+                    state.tileSpeed = obj.body.velocity.y;
                 }, this);
             nitros.forEach(function (obj) { 
                     obj.body.velocity.y += 30;
-                    tileSpeed = obj.body.velocity.y;
+                    state.tileSpeed = obj.body.velocity.y;
                 }, this); 
 
             objFactory();
@@ -388,11 +374,11 @@ function onRightPress () {
 * Contains everything what should be updated every thick.
 */
 function update () {
-    if (globalState === STAGE["NOT_STARTED"]) {
+    if (state.gameState === STAGE.NOT_STARTED) {
         player.group.forEach((element) => {
             element.position.x = 80;
         });
-    } else if (globalState === STAGE["INITATION"]) {
+    } else if (state.gameState === STAGE.INITATION) {
         jettioLogotype.y -= 0.4;
         ground.position.y += 0.3;
         bush.position.y += 0.4;
@@ -401,17 +387,17 @@ function update () {
         player.nitroFire.visible= true;
 
         if (ground.position.y > 190 && bush.position.y > 190) {
-            globalState = STAGE["FLIGHT"];
-            timer = game.time.create(false);
-            timer.loop(1000, timerUpdate, this);
-            timer.start();
+            state.gameState = STAGE.FLIGHT;
+            timers.fuel = game.time.create(false);
+            timers.fuel.loop(1000, timerUpdate, this);
+            timers.fuel.start();
             // here clear ground and bush (garbage collector needed)
         }
-    } else if (globalState === STAGE["FLIGHT"]) {
+    } else if (state.gameState === STAGE.FLIGHT) {
         texts.points.text = zeroFill(counters.coins, 6);
         sky_bg.tilePosition.y += 0.4;
-        distance += 1;
-        renderLevelInfo(distance);
+        state.distance += 1;
+        renderLevelInfo(state.distance);
 
         if (Math.floor(Math.random()*6) % 5 === 0)
             sky_bg.tilePosition.x += Math.random() * 1.5 + -0.5;
@@ -429,13 +415,13 @@ function update () {
             player.jetpack.visible = false;
             player.nitroFire.visible = false;
 
-            globalState = STAGE["GAME_OVER"];
+            state.gameState = STAGE.GAME_OVER;
             progressBar.visible = false;
             progressBar.frame = 0;
-            timer.stop();
-            distance = 0;
+            timers.fuel.stop();
+            state.distance = 0;
         }
-    } else if (globalState === STAGE["GAME_OVER"]) {
+    } else if (state.gameState === STAGE.GAME_OVER) {
         ui.gameOverPanel.visible = true;
         texts.gameOver.visible = true;
         texts.resultsPoints.visible = true;
@@ -455,10 +441,10 @@ function collisionHandler (char, obj) {
         player.jetpack.visible = false;
         player.nitroFire.visible = false;
 
-        globalState = STAGE["GAME_OVER"];
+        state.gameState = STAGE.GAME_OVER;
         progressBar.visible = false;
         progressBar.frame = 0;
-        timer.stop();
+        timers.fuel.stop();
     } else if (obj.key === "coin") {
         obj.kill();
         counters.coins++;
@@ -468,18 +454,18 @@ function collisionHandler (char, obj) {
     } else if (obj.key === "nitro-bottle") {
         obj.kill();
         if (progressBar.frame > 0) {
-            timer.stop();
-            timer.loop(1000, timerUpdate, this);
-            timer.start();
+            timers.fuel.stop();
+            timers.fuel.loop(1000, timerUpdate, this);
+            timers.fuel.start();
             progressBar.frame--;
         }
     }
 }
 
 function renderLevelInfo(distance) {
-    if (distance > levels[level].dist) {
+    if (distance > LEVEL[state.level].dist) {
         console.log("New Level");
-        texts.level = game.add.text(60, 84, levels[level].name, {font: "12px Upheavtt", fill: "#fff"});
+        texts.level = game.add.text(60, 84, LEVEL[state.level].name, {font: "12px Upheavtt", fill: "#fff"});
         texts.level.anchor.setTo(0.5);
         texts.level.stroke = "#000";
         texts.level.strokeThickness = 2;
@@ -487,7 +473,7 @@ function renderLevelInfo(distance) {
 
         game.time.events.add(Phaser.Timer.SECOND * 3, () =>{texts.level.visible = false;}, this);
 
-        level++;
+        state.level++;
     }
 }
 
