@@ -59,9 +59,6 @@ var sky_bg,
     progressBar,
     ground,
     bush,
-    counters = {
-        coins: 0
-    },
     texts = {
         points: null,
         resultsPoints: null,
@@ -158,7 +155,7 @@ function create () {
     timers.fuel.loop(2000, timerUpdate, this);
 
     // Points
-    texts.points = game.add.text(28, 10, zeroFill(counters.coins, 6), {font: "14px Upheavtt", fill: "#fff"});
+    texts.points = game.add.text(28, 10, zeroFill(state.counter.coins, 6), {font: "14px Upheavtt", fill: "#fff"});
     texts.points.anchor.setTo(0.5);
 
     // texts.points.font = 'Upheavtt';
@@ -179,7 +176,7 @@ function create () {
     texts.gameOver.strokeThickness = 2;
     texts.gameOver.visible = false;
 
-    texts.resultsPoints = game.add.text(60, 84, "Points: " + zeroFill(counters.coins, 6), {font: "12px Upheavtt", fill: "#fff"});
+    texts.resultsPoints = game.add.text(60, 84, "Points: " + zeroFill(state.counter.coins, 6), {font: "12px Upheavtt", fill: "#fff"});
     texts.resultsPoints.anchor.setTo(0.5);
     texts.resultsPoints.stroke = "#000";
     texts.resultsPoints.strokeThickness = 2;
@@ -202,7 +199,7 @@ function create () {
 
 function restartGame () {
     // counters
-    counters.coins = 0;
+    state.counter.coins = 0;
     timers.fire = 0;
 
     // visibility
@@ -394,10 +391,10 @@ function update () {
             // here clear ground and bush (garbage collector needed)
         }
     } else if (state.gameState === STAGE.FLIGHT) {
-        texts.points.text = zeroFill(counters.coins, 6);
+        texts.points.text = zeroFill(state.counter.coins, 6);
         sky_bg.tilePosition.y += 0.4;
-        state.distance += 1;
-        renderLevelInfo(state.distance);
+        state.counter.distance += 1;
+        renderLevelInfo(state.counter.distance);
 
         if (Math.floor(Math.random()*6) % 5 === 0)
             sky_bg.tilePosition.x += Math.random() * 1.5 + -0.5;
@@ -419,13 +416,13 @@ function update () {
             progressBar.visible = false;
             progressBar.frame = 0;
             timers.fuel.stop();
-            state.distance = 0;
+            state.counter.distance = 0;
         }
     } else if (state.gameState === STAGE.GAME_OVER) {
         ui.gameOverPanel.visible = true;
         texts.gameOver.visible = true;
         texts.resultsPoints.visible = true;
-        texts.resultsPoints.text = "Points: " + zeroFill(counters.coins, 6);
+        texts.resultsPoints.text = "Points: " + zeroFill(state.counter.coins, 6);
         ui.playButton.visible = true;
     }
 }
@@ -447,7 +444,7 @@ function collisionHandler (char, obj) {
         timers.fuel.stop();
     } else if (obj.key === "coin") {
         obj.kill();
-        counters.coins++;
+        state.counter.coins++;
         // if (progressBar.frame > 0) {
         //     progressBar.frame--;
         // }
