@@ -61,32 +61,6 @@ var sky_bg,
         playButton: null
     };
 
-function getRatio(type, w, h) {
-    var scaleX = width / w,
-        scaleY = height / h,
-        result = {
-            x: 1,
-            y: 1
-        };
-
-    switch (type) {
-    case 'all':
-        result.x = scaleX > scaleY ? scaleY : scaleX;
-        result.y = scaleX > scaleY ? scaleY : scaleX;
-        break;
-    case 'fit':
-        result.x = scaleX > scaleY ? scaleX : scaleY;
-        result.y = scaleX > scaleY ? scaleX : scaleY;
-        break;
-    case 'fill':
-        result.x = scaleX;
-        result.y = scaleY;
-        break;
-    }
-
-    return result;
-}
-
 /*
 * Create - predefine actions
 */
