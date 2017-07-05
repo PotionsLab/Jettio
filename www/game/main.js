@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 
 import {preloader} from "./preloader";
 
+import {zeroFill} from "./utils";
+
 import {LEVEL} from "./consts/levels";
 import {STAGE} from "./consts/stage";
 
@@ -435,15 +437,4 @@ function renderLevelInfo(distance) {
 
         state.level++;
     }
-}
-
-// Utils
-function zeroFill ( number, width ) {
-  width -= number.toString().length;
-
-  if (width > 0) {
-    return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
-  }
-
-  return number + "";
 }
