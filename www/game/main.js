@@ -10,8 +10,6 @@ import {STAGE} from "./consts/stage";
 import {state} from "./state";
 import {timers} from "./timers";
 
-const width = 320;
-const height = 480;
 const game = new Phaser.Game(
     120, 
     190, 
@@ -38,9 +36,11 @@ var sky_bg,
         jetpack: null,
         nitroFire: null
     },
-    cursors,
-    touch,
-    key = {},
+    key = {
+        left: null,
+        right: null,
+        mouse: null
+    },
     objects,
     coins,
     clouds,
@@ -151,15 +151,12 @@ function create () {
     ui.playButton.visible = false;
 
     // Keys
-    cursors = game.input.keyboard.createCursorKeys();
     key.left = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
     key.left.onDown.add(onKeyPress, this);
     key.right = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
     key.right.onDown.add(onKeyPress, this);
 
     key.mouse = game.input.onDown.add(onKeyPress, this);
-
-    key.pointer1 = game.input.mousePointer;
 }
 
 function restartGame () {
