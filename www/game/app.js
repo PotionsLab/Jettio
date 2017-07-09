@@ -2,11 +2,11 @@ import 'pixi'
 import 'p2'
 import Phaser from 'phaser'
 
-import BootView from './views/Boot'
-import SplashView from './views/Splash'
-import GameView from './views/Game'
+import BootView from './views/boot'
+import SplashView from './views/splash'
+import GameView from './views/game'
 
-import config from './config'
+// import config from './config'
 
 class App extends Phaser.Game {
   constructor () {
@@ -15,9 +15,9 @@ class App extends Phaser.Game {
 
     super(width, height, Phaser.CANVAS, 'game', null)
 
-    this.state.add('Boot', BootState, false)
-    this.state.add('Splash', SplashState, false)
-    this.state.add('Game', GameState, false)
+    this.state.add('Boot', BootView, false)
+    this.state.add('Splash', SplashView, false)
+    this.state.add('Game', GameView, false)
 
     this.state.start('Boot')
   }
