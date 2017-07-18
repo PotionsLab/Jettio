@@ -24,13 +24,11 @@ export default class extends Phaser.State {
     this.load.image('game-over-panel', SERVER_URL + '/assets/images/game-over-panel.png');
     this.load.image('play-button', SERVER_URL + '/assets/images/play-button.png');
     this.load.spritesheet('nitro-bottle', SERVER_URL + '/assets/images/nitro-bottle.png', 20, 20, 1);
-
-    // this.load.image('mushroom', 'assets/images/mushroom2.png')
   }
 
   create () {
     setTimeout(() => {
       this.state.start("Game");
-    }, 5000);
+    }, 2000);
   }
 }
